@@ -28,6 +28,7 @@ export interface ToastOptions {
   clickClosable?: boolean;
   position?: Position;
   maxVisibleToasts?: number | null;
+  reverse?: boolean;
   render?: ((message: ReactNode) => ReactNode) | null;
   onClick?: ClickHandler;
   onClose?: () => void;
@@ -43,13 +44,14 @@ export interface ConfigArgs
     | 'clickClosable'
     | 'position'
     | 'maxVisibleToasts'
+    | 'reverse'
     | 'render'
   > {}
 
 export interface ToastProps
   extends Pick<
     ToastOptions,
-    'className' | 'clickable' | 'position' | 'render' | 'onClick'
+    'className' | 'clickable' | 'position' | 'reverse' | 'render' | 'onClick'
   > {
   message: ReactNode;
   isExit?: boolean;
@@ -88,6 +90,7 @@ const defaultOptions: Required<ConfigArgs> = {
   clickClosable: false,
   render: null,
   maxVisibleToasts: null,
+  reverse: false,
 };
 
 const isValidPosition = (position: Position): boolean => {
@@ -124,6 +127,9 @@ export const toastConfig = (options: ConfigArgs) => {
   }
   if (options.maxVisibleToasts) {
     defaultOptions.maxVisibleToasts = options.maxVisibleToasts;
+  }
+  if (options.reverse) {
+    defaultOptions.reverse = options.reverse;
   }
 };
 
@@ -177,6 +183,7 @@ const Toast = ({
   clickable,
   position,
   isExit,
+  reverse,
   render,
   onClick,
 }: ToastProps): ReactElement => {
@@ -197,7 +204,7 @@ const Toast = ({
   useLayoutEffect(() => {
     const topOrCenter =
       position && (position.indexOf('top') > -1 || position === 'center');
-    if (isExit && position && topOrCenter) {
+    if (isExit && position && (topOrCenter || reverse)) {
       if (messageDOM.current) messageDOM.current.style.height = '0px';
     }
   }, [isExit]);
@@ -276,6 +283,7 @@ function renderToast(
     className = defaultOptions.className,
     position = defaultOptions.position,
     maxVisibleToasts = defaultOptions.maxVisibleToasts,
+    reverse = defaultOptions.reverse,
     render = defaultOptions.render,
     onClick = undefined,
     onClose = undefined,
@@ -301,7 +309,7 @@ function renderToast(
     if (onClick) onClick(...args);
   };
 
-  toastComponentList.push({
+  const newToastComponent = {
     id,
     message,
     position,
@@ -311,11 +319,15 @@ function renderToast(
         className={className}
         clickable={clickable || clickClosable}
         position={position}
+        reverse={reverse}
         render={render}
         onClick={handleClick}
       />
     ),
-  });
+  };
+  if (reverse) toastComponentList.unshift(newToastComponent);
+  else toastComponentList.push(newToastComponent);
+
   const visibleToastOffset =
     maxVisibleToasts && toastComponentList.length - maxVisibleToasts;
   if (visibleToastOffset) toastComponentList.slice(visibleToastOffset);
@@ -356,6 +368,7 @@ function renderToast(
             className={className}
             clickable={clickable || clickClosable}
             position={position}
+            reverse={reverse}
             render={render}
             onClick={handleClick}
           />
