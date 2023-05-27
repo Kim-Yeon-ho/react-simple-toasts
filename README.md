@@ -1,4 +1,3 @@
-[Test Commit] 201911015 김지훈 / 202111529 노유신
 # React Simple Toasts 🍞
 
 React Simple Toasts is a lightweight, user-friendly toast message library for React applications.
