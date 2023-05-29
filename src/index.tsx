@@ -230,7 +230,7 @@ const Toast = ({
       } ${isExit ? 'toast-exit-active' : ''} ${className}`}
     >
       {render ? (
-        render(message)
+        <div {...(clickable && clickableProps)}>{render(message)}</div>
       ) : (
         <div className={contentClassNames} {...(clickable && clickableProps)}>
           {message}
