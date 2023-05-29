@@ -328,10 +328,6 @@ function renderToast(
   if (reverse) toastComponentList.unshift(newToastComponent);
   else toastComponentList.push(newToastComponent);
 
-  const visibleToastOffset =
-    maxVisibleToasts && toastComponentList.length - maxVisibleToasts;
-  if (visibleToastOffset) toastComponentList.slice(visibleToastOffset);
-
   if (maxVisibleToasts) {
     const toastsToRemove = toastComponentList.length - maxVisibleToasts;
     for (let i = 0; i < toastsToRemove; i++) {
