@@ -21,7 +21,6 @@ export interface ToastOptions {
   /**
    * @deprecated The time option is deprecated. Use duration instead.
    */
-  time?: number;
   duration?: number;
   className?: string;
   clickable?: boolean;
@@ -38,7 +37,6 @@ export interface ToastOptions {
 export interface ConfigArgs
   extends Pick<
     ToastOptions,
-    | 'time'
     | 'duration'
     | 'className'
     | 'clickClosable'
@@ -83,7 +81,6 @@ const init = () => {
 };
 
 const defaultOptions: Required<ConfigArgs> = {
-  time: 3000,
   duration: 3000,
   className: '',
   position: 'bottom-center',
@@ -107,9 +104,6 @@ const isValidPosition = (position: Position): boolean => {
 };
 
 export const toastConfig = (options: ConfigArgs) => {
-  if (options.time) {
-    defaultOptions.time = options.time;
-  }
   if (options.duration) {
     defaultOptions.duration = options.duration;
   }
@@ -272,11 +266,10 @@ function renderToast(
     update: () => {},
   };
   if (!isBrowser()) return dummyReturn;
-
+    
   let closeTimer: number;
   const id = createId();
   const {
-    time = undefined,
     duration,
     clickable = false,
     clickClosable = defaultOptions.clickClosable,
@@ -290,7 +283,7 @@ function renderToast(
     onCloseStart = undefined,
   } = options || {};
   const durationTime =
-    duration || time || defaultOptions.duration || defaultOptions.time;
+    duration ||  defaultOptions.duration;
   const closeOptions = { onClose, onCloseStart };
 
   if (!isValidPosition(position)) {
@@ -392,9 +385,7 @@ function toast(
   return renderToast(message, options);
 }
 
-export const createToast = (
-  options: Omit<ConfigArgs, 'time'>,
-): typeof toast => {
+export const createToast = (options: ConfigArgs): typeof toast => {
   const toastInstanceId = createId();
 
   return (message, durationOrOptions) => {
