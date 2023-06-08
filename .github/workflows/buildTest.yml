@@ -3,7 +3,7 @@ name: Build Test
 on:
 #dev 브랜치에 PR을 날릴 경우 이 workflow가 실행이 된다.
   pull_request:
-    branches: [ "dev" ]
+    branches: [ dev ]
 
 jobs:
 # 이 workflow의 실행은 하나 이상의 job으로 구성이 된다.
@@ -23,6 +23,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        #npm ci는 npm install과 같은 기능을 합니다.
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
