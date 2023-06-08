@@ -23,7 +23,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        #npm ci는 npm install과 같은 기능을 합니다.
-    - run: npm ci
+    - run: npm install
     - run: npm run build --if-present
     - run: npm test
