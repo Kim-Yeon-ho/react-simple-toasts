@@ -58,7 +58,13 @@ export interface ConfigArgs
 export interface ToastProps
   extends Pick<
     ToastOptions,
-    'className' | 'clickable' | 'position' | 'render' | 'theme' | 'onClick'
+    | 'className'
+    | 'clickable'
+    | 'position'
+    | 'render'
+    | 'theme'
+    | 'onClick'
+    | 'reverse'
   > {
   message: ReactNode;
   isExit?: boolean;
@@ -280,7 +286,7 @@ function renderToast(
     update: () => {},
   };
   if (!isBrowser()) return dummyReturn;
-    
+
   let closeTimer: number;
   const id = createId();
   const {
@@ -297,8 +303,7 @@ function renderToast(
     onClose = undefined,
     onCloseStart = undefined,
   } = options || {};
-  const durationTime =
-    duration ||  defaultOptions.duration;
+  const durationTime = duration || defaultOptions.duration;
   const closeOptions = { onClose, onCloseStart };
 
   if (!isValidPosition(position)) {
