@@ -41,7 +41,7 @@ export default {
       extract: false,
       modules: true,
       sourceMap: false,
-      use: [ 'sass' ]
-    })
+      use: ['sass'],
+    }),
   ],
 };

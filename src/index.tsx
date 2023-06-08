@@ -12,10 +12,17 @@ import styles from './style.css';
 import { addRootElement, createElement } from './lib/generateElement';
 import { render as reactRender } from './lib/react-render';
 import { createId, isBrowser } from './lib/utils';
-import { SET_TIMEOUT_MAX, ToastPosition } from './lib/constants';
+import { SET_TIMEOUT_MAX, ToastPosition as Position } from './lib/constants';
 
 type ClickHandler = (e: SyntheticEvent<HTMLDivElement>) => void | Promise<void>;
-type Position = (typeof ToastPosition)[keyof typeof ToastPosition];
+export type ToastPosition = (typeof Position)[keyof typeof Position];
+
+export const Themes = {
+  LIGHT: 'light',
+  DARK: 'dark',
+} as const;
+
+export type Theme = (typeof Themes)[keyof typeof Themes];
 
 export interface ToastOptions {
   /**
@@ -25,10 +32,11 @@ export interface ToastOptions {
   className?: string;
   clickable?: boolean;
   clickClosable?: boolean;
-  position?: Position;
+  position?: ToastPosition;
   maxVisibleToasts?: number | null;
   reverse?: boolean;
   render?: ((message: ReactNode) => ReactNode) | null;
+  theme?: Theme | null;
   onClick?: ClickHandler;
   onClose?: () => void;
   onCloseStart?: () => void;
@@ -44,12 +52,19 @@ export interface ConfigArgs
     | 'maxVisibleToasts'
     | 'reverse'
     | 'render'
+    | 'theme'
   > {}
 
 export interface ToastProps
   extends Pick<
     ToastOptions,
-    'className' | 'clickable' | 'position' | 'reverse' | 'render' | 'onClick'
+    | 'className'
+    | 'clickable'
+    | 'position'
+    | 'render'
+    | 'theme'
+    | 'onClick'
+    | 'reverse'
   > {
   message: ReactNode;
   isExit?: boolean;
@@ -64,7 +79,7 @@ export interface Toast {
 let toastComponentList: {
   id: number;
   message: ReactNode;
-  position: Position;
+  position: ToastPosition;
   component: ReactElement;
   isExit?: boolean;
 }[] = [];
@@ -88,15 +103,16 @@ const defaultOptions: Required<ConfigArgs> = {
   render: null,
   maxVisibleToasts: null,
   reverse: false,
+  theme: null,
 };
 
-const isValidPosition = (position: Position): boolean => {
-  const positionList = Object.values(ToastPosition);
+const isValidPosition = (position: ToastPosition): boolean => {
+  const positionList = Object.values(Position);
   if (!positionList.includes(position)) {
     throw new Error(
-      `Invalid position value. Expected one of ${Object.values(
-        ToastPosition,
-      ).join(', ')} but got ${position}`,
+      `Invalid position value. Expected one of ${positionList.join(
+        ', ',
+      )} but got ${position}`,
     );
   }
 
@@ -104,6 +120,11 @@ const isValidPosition = (position: Position): boolean => {
 };
 
 export const toastConfig = (options: ConfigArgs) => {
+  if (!isBrowser()) return;
+
+  if (options.theme) {
+    defaultOptions.theme = options.theme;
+  }
   if (options.duration) {
     defaultOptions.duration = options.duration;
   }
@@ -132,7 +153,7 @@ const renderDOM = () => {
   const toastContainer = document.getElementById(styles['toast_container']);
   if (!toastContainer) return;
 
-  const defaultToastList = Object.values(ToastPosition).reduce(
+  const defaultToastList = Object.values(Position).reduce(
     (acc, position) => ({
       ...acc,
       [position]: [],
@@ -179,6 +200,7 @@ const Toast = ({
   isExit,
   reverse,
   render,
+  theme,
   onClick,
 }: ToastProps): ReactElement => {
   const messageDOM = useRef<HTMLDivElement>(null);
@@ -206,6 +228,8 @@ const Toast = ({
   const contentClassNames = [
     styles['toast-content'],
     clickable ? styles['clickable'] : '',
+    `toast-${theme}`,
+    className,
   ]
     .filter(Boolean)
     .join(' ');
@@ -221,7 +245,7 @@ const Toast = ({
       ref={messageDOM}
       className={`${styles['toast-message']} ${
         isEnter ? 'toast-enter-active' : ''
-      } ${isExit ? 'toast-exit-active' : ''} ${className}`}
+      } ${isExit ? 'toast-exit-active' : ''}`}
     >
       {render ? (
         <div {...(clickable && clickableProps)}>{render(message)}</div>
@@ -242,16 +266,12 @@ function closeToast(
   if (toastComponentList[index]) {
     toastComponentList[index].isExit = true;
   }
-  if (options.onCloseStart) {
-    options.onCloseStart();
-  }
+  options.onCloseStart?.();
   renderDOM();
 
   setTimeout(() => {
     toastComponentList = toastComponentList.filter((t) => t.id !== id);
-    if (options.onClose) {
-      options.onClose();
-    }
+    options.onClose?.();
     renderDOM();
   }, 300);
 }
@@ -266,7 +286,7 @@ function renderToast(
     update: () => {},
   };
   if (!isBrowser()) return dummyReturn;
-    
+
   let closeTimer: number;
   const id = createId();
   const {
@@ -278,12 +298,12 @@ function renderToast(
     maxVisibleToasts = defaultOptions.maxVisibleToasts,
     reverse = defaultOptions.reverse,
     render = defaultOptions.render,
+    theme = defaultOptions.theme,
     onClick = undefined,
     onClose = undefined,
     onCloseStart = undefined,
   } = options || {};
-  const durationTime =
-    duration ||  defaultOptions.duration;
+  const durationTime = duration || defaultOptions.duration;
   const closeOptions = { onClose, onCloseStart };
 
   if (!isValidPosition(position)) {
@@ -299,7 +319,7 @@ function renderToast(
       }
       closeToast(id, closeOptions);
     }
-    if (onClick) onClick(...args);
+    onClick?.(...args);
   };
 
   const newToastComponent = {
@@ -314,6 +334,7 @@ function renderToast(
         position={position}
         reverse={reverse}
         render={render}
+        theme={theme}
         onClick={handleClick}
       />
     ),
@@ -359,6 +380,7 @@ function renderToast(
             position={position}
             reverse={reverse}
             render={render}
+            theme={theme}
             onClick={handleClick}
           />
         );
