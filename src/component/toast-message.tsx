@@ -49,7 +49,11 @@ function ToastMessage({
   const [isEnter, setIsEnter] = useState(false);
   const [messageStyle, setMessageStyle] = useState<React.CSSProperties>({
     transform: `translate(${offsetX}, ${
-      isTopPosition || isReversedOrder ? parseInt(offsetY || '0') - 20 : 20
+      isTopPosition
+        ? parseInt(offsetY || '0') - 20
+        : isReversedOrder
+        ? parseInt(offsetY || '0') + 20
+        : 20
     }px)`,
   });
 
@@ -111,7 +115,7 @@ function ToastMessage({
       style={messageStyle}
     >
       {render ? (
-        render(message)
+        <div {...(clickable && clickableProps)}>{render(message)}</div>
       ) : (
         <div className={contentClassNames} {...(clickable && clickableProps)}>
           {message}
